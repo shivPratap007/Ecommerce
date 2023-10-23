@@ -1,4 +1,5 @@
 const productModel = require("../models/productModel");
+const ErrorHandler = require("../utils/errorHandeling");
 
 // API TO GET ALL THE PRODUCTS
 const productController = async (req, res) => {
@@ -51,14 +52,14 @@ const deleteProductController = async (req, res) => {
 };
 
 // API TO FIND THE PRODUCT
-const findTheProductController = async (req, res) => {
+
+const findTheProductController = async (req, res, next) => {
   const product = await productModel.findById(req.params.id);
 
   if (!product) {
-    res.status(401).json({
-      status: false,
-      message: "Data not found",
-    });
+    
+    return next(new ErrorHandler("Product not found,haha",404));
+
   } else {
     res.status(200).json({
       status: true,
@@ -69,7 +70,7 @@ const findTheProductController = async (req, res) => {
 };
 
 // API TO UPDATE THE PRODUCT
-const updateProductController = async (req, res) => {
+const updateProductController = async (req, res,) => {
   try {
     const product = await productModel.findByIdAndUpdate(
       req.params.id,
