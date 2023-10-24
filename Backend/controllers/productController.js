@@ -1,15 +1,16 @@
 const productModel = require("../models/productModel");
+const Apifeatures = require("../utils/apiFeatures");
 const ErrorHandler = require("../utils/errorHandeling");
 
 // API TO GET ALL THE PRODUCTS
 const productController = async (req, res, next) => {
   try {
-    const allProducts = await productModel.find({});
+    const search = new Apifeatures(productModel, req.query || {}).search().filter().pagination(2);
+    var allProducts = await search.modelN;
 
-    if(!allProducts){
+    if (!allProducts) {
       return next(new ErrorHandler("Data not found", 400));
-    }
-    else{
+    } else {
       res.status(201).json({
         allProducts,
       });
@@ -17,9 +18,9 @@ const productController = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.status(401).json({
-      status:false,
-      message:error.message,
-    })
+      status: false,
+      message: error.message,
+    });
   }
 };
 
@@ -28,26 +29,25 @@ const oneProductController = async (req, res, next) => {
   try {
     const product = await productModel.create(req.body);
     console.log(product);
-    if(!product){
+    if (!product) {
       return next(new ErrorHandler("Product not created", 400));
-    }
-    else{
+    } else {
       res.status(200).json({
-        status:true,
-        message:"Product created successfully",
-      })
+        status: true,
+        message: "Product created successfully",
+      });
     }
   } catch (error) {
     console.log(error);
     res.status(401).json({
-      status:false,
-      message:error.message,
-    })
+      status: false,
+      message: error.message,
+    });
   }
 };
 
 // API TO DELETE THE PRODUCT
-const deleteProductController = async (req, res,next) => {
+const deleteProductController = async (req, res, next) => {
   try {
     const product = await productModel.findById(req.params.id);
     console.log(product);
@@ -64,9 +64,9 @@ const deleteProductController = async (req, res,next) => {
   } catch (error) {
     console.log(error);
     res.status(401).json({
-      status:false,
-      message:error.message,
-    })
+      status: false,
+      message: error.message,
+    });
   }
 };
 
@@ -88,9 +88,9 @@ const findTheProductController = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.status(401).json({
-      status:false,
-      message:error.message,
-    })
+      status: false,
+      message: error.message,
+    });
   }
 };
 
@@ -116,9 +116,9 @@ const updateProductController = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(401).json({
-      status:false,
-      message:error.message,
-    })
+      status: false,
+      message: error.message,
+    });
   }
 };
 
