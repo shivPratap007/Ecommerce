@@ -3,6 +3,13 @@ const app = require("./app");
 const database = require("./config/database");
 const errorMiddleware=require("./middlewares/error");
 
+// HANDELING UNCAUGHT ERROR
+process.on('uncaughtException',(error)=>{
+  console.log(`Error: ${error.message}`);
+  console.log('Shutting down the server due to uncaught error');
+  process.exit(1);
+})
+
 // To accept json
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -21,10 +28,15 @@ app.use(errorMiddleware);
 
 database(process.env.DATABASE);
 
-app.listen(port, () => {
+const application=app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-app.get("/helo", (req, res) => {
-  console.log(req.body);
-});
+// Unhandeld promise rejections
+process.on("unhandledRejection",(error)=>{
+  console.log(`Error: ${error.message}`);
+  console.log('Shutting down the server due to unhandeld promise rejections');
+  application.close(()=>{
+    process.exit(1);
+  })
+})

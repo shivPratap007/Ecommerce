@@ -2,38 +2,58 @@ const productModel = require("../models/productModel");
 const ErrorHandler = require("../utils/errorHandeling");
 
 // API TO GET ALL THE PRODUCTS
-const productController = async (req, res) => {
+const productController = async (req, res, next) => {
   try {
     const allProducts = await productModel.find({});
-    res.status(201).json({
-      allProducts,
-    });
+
+    if(!allProducts){
+      return next(new ErrorHandler("Data not found", 400));
+    }
+    else{
+      res.status(201).json({
+        allProducts,
+      });
+    }
   } catch (error) {
     console.log(error);
+    res.status(401).json({
+      status:false,
+      message:error.message,
+    })
   }
 };
 
-// API TO CREATE ALL THE PRODUCTS
-const oneProductController = async (req, res) => {
+// API TO CREATE ONE THE PRODUCTS
+const oneProductController = async (req, res, next) => {
   try {
     const product = await productModel.create(req.body);
     console.log(product);
-    res.send("Data inserted successfully");
+    if(!product){
+      return next(new ErrorHandler("Product not created", 400));
+    }
+    else{
+      res.status(200).json({
+        status:true,
+        message:"Product created successfully",
+      })
+    }
   } catch (error) {
     console.log(error);
+    res.status(401).json({
+      status:false,
+      message:error.message,
+    })
   }
 };
 
-const deleteProductController = async (req, res) => {
+// API TO DELETE THE PRODUCT
+const deleteProductController = async (req, res,next) => {
   try {
     const product = await productModel.findById(req.params.id);
     console.log(product);
 
     if (!product) {
-      res.status(400).json({
-        status: false,
-        message: "Data not found",
-      });
+      return next(ErrorHandler(400, "Data not found"));
     }
 
     const foundProduct = await productModel.findByIdAndDelete(req.params.id);
@@ -44,33 +64,38 @@ const deleteProductController = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(401).json({
-      status: false,
-      message: "Data not found",
-      error: { error },
-    });
+      status:false,
+      message:error.message,
+    })
   }
 };
 
 // API TO FIND THE PRODUCT
 
 const findTheProductController = async (req, res, next) => {
-  const product = await productModel.findById(req.params.id);
+  try {
+    const product = await productModel.findById(req.params.id);
 
-  if (!product) {
-    
-    return next(new ErrorHandler("Product not found,haha",404));
-
-  } else {
-    res.status(200).json({
-      status: true,
-      message: "Data found",
-      data: product,
-    });
+    if (!product) {
+      return next(new ErrorHandler("Product not found,haha", 404));
+    } else {
+      res.status(200).json({
+        status: true,
+        message: "Data found",
+        data: product,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      status:false,
+      message:error.message,
+    })
   }
 };
 
 // API TO UPDATE THE PRODUCT
-const updateProductController = async (req, res,) => {
+const updateProductController = async (req, res) => {
   try {
     const product = await productModel.findByIdAndUpdate(
       req.params.id,
@@ -82,21 +107,18 @@ const updateProductController = async (req, res,) => {
         status: false,
         message: "Product not found",
       });
+    } else {
+      res.status(201).json({
+        status: true,
+        message: "Data updated successfully",
+      });
     }
-
-    else{
-        res.status(201).json({
-            status:true,
-            message:"Data updated successfully",
-        })
-    }
-  } 
-  catch (error) {
-    res.status(400).json({
-      status: false,
-      message: "Data not found",
-      error: error,
-    });
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      status:false,
+      message:error.message,
+    })
   }
 };
 
