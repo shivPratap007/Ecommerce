@@ -1,4 +1,3 @@
-const ErrorHandler = require("../utils/errorHandeling");
 
 
 module.exports=(err,req,res,next)=>{

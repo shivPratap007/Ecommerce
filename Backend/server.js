@@ -23,6 +23,10 @@ const port = require("./config/envVariable") || 7000;
 const productRouter = require("./routes/productRoute");
 app.use("/api/v1", productRouter);
 
+// user route
+const userRouter=require('./routes/userRoute');
+app.use('/api/v1',userRouter);
+
 // Middleware for error
 app.use(errorMiddleware);
 
