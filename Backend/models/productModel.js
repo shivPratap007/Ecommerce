@@ -55,7 +55,12 @@ const product=new mongoose.Schema({
                 required:true,
             }
         }
-    ]
+    ],
+    user:{
+        type:mongoose.Schema.ObjectId,
+        ref:'users',
+        required:true,
+    },
 
 },{timestamps:true});
 

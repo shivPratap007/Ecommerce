@@ -5,7 +5,10 @@ const ErrorHandler = require("../utils/errorHandeling");
 // API TO GET ALL THE PRODUCTS
 const productController = async (req, res, next) => {
   try {
-    const search = new Apifeatures(productModel, req.query || {}).search().filter().pagination(2);
+    const search = new Apifeatures(productModel, req.query || {})
+      .search()
+      .filter()
+      .pagination(2);
     var allProducts = await search.modelN;
 
     if (!allProducts) {
@@ -27,6 +30,8 @@ const productController = async (req, res, next) => {
 // API TO CREATE ONE THE PRODUCTS
 const oneProductController = async (req, res, next) => {
   try {
+    console.log(req.userFromToken);
+    req.body.user = req.userFromToken.id;
     const product = await productModel.create(req.body);
     console.log(product);
     if (!product) {

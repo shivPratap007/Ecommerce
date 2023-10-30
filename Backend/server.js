@@ -2,6 +2,8 @@ const express = require("express");
 const app = require("./app");
 const database = require("./config/database");
 const errorMiddleware=require("./middlewares/error");
+const cookieParser=require('cookie-parser');
+
 
 // HANDELING UNCAUGHT ERROR
 process.on('uncaughtException',(error)=>{
@@ -13,6 +15,11 @@ process.on('uncaughtException',(error)=>{
 // To accept json
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// To accept cookie
+app.use(cookieParser());
+
+
+
 
 
 
