@@ -3,6 +3,7 @@ const userModel = require("../models/userModel");
 const sentToken = require("../utils/jwtTokens");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
+const hashPassword = require("../utils/updatePasswordHashGenerator");
 
 // To create the user
 const createUser = async (req, res, next) => {
@@ -38,15 +39,16 @@ const loginController = async (req, res, next) => {
     }
 
     const result = await userModel.findOne({ Email });
-    console.log(result);
+    console.log(1);
     if (!result) {
       return next(new ErrorHandler("Invalid email or password", 400));
     }
-
     const isPassowrdCorrect = await result.passwordChecker(Password);
+    console.log(isPassowrdCorrect);
     if (!isPassowrdCorrect) {
       return next(new ErrorHandler("Invalid email or password", 400));
     }
+    console.log("here");
     sentToken(result, 202, res); // We are able to send the whole response object
   } catch (error) {
     res.status(400).json({
@@ -108,28 +110,156 @@ const resetNewPassword = async (req, res, next) => {
   console.log(req.params.token);
   const resetPasswordToken = crypto
     .createHash("sha256")
-    .update(req.params.token).digest('hex')
-  
-  const user=await userModel.findOne({
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await userModel.findOne({
     resetPasswordToken,
-    resetPasswordExpire:{$gt:Date.now()},
+    resetPasswordExpire: { $gt: Date.now() },
   });
 
-  if(!user){
-    return next(new ErrorHandler('Reset Password Token is expired', 400));
+  if (!user) {
+    return next(new ErrorHandler("Reset Password Token is expired", 400));
   }
 
-  if(req.body.Password!=req.body.ConfirmPassword){
-    return next(new ErrorHandler("Password and confirm Password does not match with each other",400));
+  if (req.body.Password != req.body.ConfirmPassword) {
+    return next(
+      new ErrorHandler(
+        "Password and confirm Password does not match with each other",
+        400
+      )
+    );
   }
 
-  user.Password=req.body.Password;
-  user.resetPasswordToken=undefined;
-  user.resetPasswordExpire=undefined;
+  user.Password = req.body.Password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
 
   await user.save();
 
-  sentToken(user,200,res);
+  sentToken(user, 200, res);
+};
+
+// User details --it will only be accessed when user is login
+const userDetails = async (req, res, next) => {
+  const user = await userModel.findOne({ _id: req.userFromToken.id });
+  res.status(200).json({
+    status: true,
+    data: user,
+  });
+};
+
+// Update Password
+
+const changePassword = async (req, res, next) => {
+  const { newPassword, confirmPassword, oldPassword } = req.body;
+
+  const user = await userModel.findOne({ _id: req.userFromToken.id });
+
+  const isOldPasswordCorrect = await user.passwordChecker(oldPassword);
+
+  if (!isOldPasswordCorrect) {
+    return next(new ErrorHandler("Old Password is incorrect", 400));
+  }
+
+  if (newPassword !== confirmPassword) {
+    return next(
+      new ErrorHandler("New Password and Confirm Password are not same", 400)
+    );
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+  await userModel.findByIdAndUpdate(req.userFromToken.id, {
+    Password: hashedPassword,
+  });
+
+  sentToken(user, 200, res);
+};
+
+// Update user profile
+
+const updateUserProfile = async (req, res, next) => {
+  console.log(req.body);
+  const userNewData = {
+    Name: req.body.Name,
+    Email: req.body.Email,
+  };
+
+  const user = await userModel.findByIdAndUpdate(
+    req.userFromToken._id,
+    userNewData,
+    {
+      new: true,
+      runValidators: true,
+      userFindAndModify: false,
+    }
+  );
+
+  res.status(200).json({
+    success: true,
+  });
+};
+
+// Get all users (Admin)
+
+const getAllUsers = async (req, res, next) => {
+  const users = await userModel.find({}, "-Password");
+  res.status(200).json({
+    users,
+  });
+};
+
+// Get the details of the specific user (Admin)
+
+const getSpecificUser = async (req, res, next) => {
+  const user = await userModel.findById(req.params.id, "-Password");
+
+  if (!user) {
+    return next(
+      new ErrorHandler(`User does not exist of id ${req.params.id}`),
+      400
+    );
+  }
+  res.status(200).json({
+    data: user,
+  });
+};
+
+// Update user role (Admin)
+const updateUserRole = async (req, res, next) => {
+  console.log(req.body.Role);
+
+  const user = await userModel.findByIdAndUpdate(
+    req.params.id,
+    { $set: { role: "admin" } },
+    { new: true, runValidators: true }
+  );
+  console.log(user);
+
+  if (!user) {
+    return next(new ErrorHandler("User not found", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+  });
+};
+
+// Delete user (Admin)
+const deleteUser = async (req, res, next) => {
+  const user = await userModel.findById(req.params.id);
+
+  if (!user) {
+    return next(
+      new ErrorHandler(`User not found with id ${req.params.id}`, 404)
+    );
+  }
+
+  const result=await userModel.deleteOne({ _id: req.params.id });
+
+  res.status(200).json({
+    status: true,
+  });
 };
 
 module.exports = {
@@ -138,4 +268,12 @@ module.exports = {
   LogoutController,
   getResetPasswordToken,
   resetNewPassword,
+  userDetails,
+  changePassword,
+  updateUserProfile,
+  getAllUsers,
+  getSpecificUser,
+  updateUserProfile,
+  updateUserRole,
+  deleteUser,
 };

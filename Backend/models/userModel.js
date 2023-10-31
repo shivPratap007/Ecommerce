@@ -67,8 +67,9 @@ users.methods.generateJwtTokens = function () {
 };
 
 // method to compare the user entered password and the hash password stored in the DB
-users.methods.passwordChecker = function (userPassowrd) {
-  return bcrypt.compare(userPassowrd, this.Password);
+users.methods.passwordChecker = async function (userPassword) {
+  const res=await bcrypt.compare(userPassword, this.Password);
+  return res;
 };
 
 // token for reset password
@@ -84,6 +85,9 @@ users.methods.getResetTokens = function () {
   this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
   return resetToken;
 };
+
+
+
 const userModel = mongoose.model("users", users);
 
 module.exports = userModel;
