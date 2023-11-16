@@ -1,69 +1,88 @@
-const mongoose=require('mongoose');
+const mongoose = require("mongoose");
 
-const product=new mongoose.Schema({
-    Name:{
-        type:String,
-        required:true,
+const product = new mongoose.Schema(
+  {
+    Name: {
+      type: String,
+      required: true,
     },
-    Description:{
-        type:String,
-        required:true,
+    Description: {
+      type: String,
+      required: true,
     },
-    Price:{
-        type:Number,
-        required:true,
-        maxlength:8,
+    Price: {
+      type: Number,
+      required: true,
+      maxlength: 8,
     },
-    Rating:{
-        type:Number,
-        default:0,
+    Rating: {
+      type: Number,
+      default: 0,
     },
-    Image:[
-        {
-            PublicID:{
-                type:String,
-                required:true,
-            },
-            URL:{
-                type:String,
-                required:true,
-            }
-        }
+    Image: [
+      {
+        PublicID: {
+          type: String,
+          required: true,
+        },
+        URL: {
+          type: String,
+          required: true,
+        },
+      },
     ],
-    Category:{
-        type:String,
-        required:true,
+    Category: {
+      type: String,
+      required: true,
     },
-    Stock:{
-        type:Number,
-        required:true,
-        maxlength:4,
-        default:1,
+    Stock: {
+      type: Number,
+      required: true,
+      maxlength: 4,
+      default: 1,
     },
-    Reviews:[
-        {
-            Name:{
-                type:String,
-                required:true,
-            },
-            Rating:{
-                type:String,
-                required:true,
-            },
-            Comment:{
-                type:String,
-                required:true,
-            }
-        }
+    Reviews: [
+      {
+        User: {
+          type: mongoose.Schema.ObjectId,
+          ref: "users",
+          required: true,
+        },
+        Name: {
+          type: String,
+          required: true,
+        },
+        Rating: {
+          type: String,
+          required: true,
+        },
+        Comment: {
+          type: String,
+          required: true,
+        },
+      },
     ],
-    user:{
-        type:mongoose.Schema.ObjectId,
-        ref:'users',
-        required:true,
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: "users",
+      required: true,
     },
+  },
+  { timestamps: true }
+);
 
-},{timestamps:true});
+product.methods.updateAverage = async function () {
+  let sum = 0;
+  this.Reviews.forEach((rev) => {
+    sum += parseInt(rev.Rating);
+  });
+  let avg = sum / parseInt(this.Reviews.length);
 
-const productModel=mongoose.model("product",product);
+  this.Rating = avg;
+  await this.save();
+  return this.Rating;
+};
 
-module.exports=productModel;
+const productModel = mongoose.model("product", product);
+
+module.exports = productModel;

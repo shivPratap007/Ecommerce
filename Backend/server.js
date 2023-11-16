@@ -5,6 +5,7 @@ const errorMiddleware=require("./middlewares/error");
 const cookieParser=require('cookie-parser');
 
 
+
 // HANDELING UNCAUGHT ERROR
 process.on('uncaughtException',(error)=>{
   console.log(`Error: ${error.message}`);
@@ -34,6 +35,10 @@ app.use("/api/v1", productRouter);
 const userRouter=require('./routes/userRoute');
 app.use('/api/v1',userRouter);
 
+// order route
+const orderRouter=require('./routes/orderRoutes');
+app.use('/api/v1/',orderRouter);
+
 // Middleware for error
 app.use(errorMiddleware);
 
@@ -49,5 +54,12 @@ process.on("unhandledRejection",(error)=>{
   console.log('Shutting down the server due to unhandeld promise rejections');
   application.close(()=>{
     process.exit(1);
+  })
+})
+
+app.get("/api/v1/order/me",(req,res)=>{
+  console.log("Running");
+  res.json({
+    status:true,
   })
 })

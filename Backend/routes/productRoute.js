@@ -2,9 +2,10 @@ const express=require('express');
 
 const router=express.Router();
 
-const {productController, oneProductController, deleteProductController, findTheProductController, updateProductController}=require("../controllers/productController");
+const {productController, oneProductController, deleteProductController, findTheProductController, updateProductController, productReview, getAllReviews, deleteReview}=require("../controllers/productController");
 
 const {auth,adminAuth}=require('../middlewares/auth');
+const productModel = require('../models/productModel');
 
 
 router.get('/products',productController);
@@ -15,7 +16,13 @@ router.delete('/admin/product/:id',auth,adminAuth('admin'),deleteProductControll
 
 router.get('/product/:id', findTheProductController);
 
-router.patch('/admin/product/:id',adminAuth('admin'), updateProductController);
+router.patch('/admin/product/:id',auth,adminAuth('admin'), updateProductController);
+
+router.patch('/review',auth,productReview);
+
+router.get('/allReviews', auth,getAllReviews);
+
+router.delete('/deleteReview', auth ,deleteReview);
 
 module.exports=router;
 

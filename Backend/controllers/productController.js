@@ -127,10 +127,96 @@ const updateProductController = async (req, res) => {
   }
 };
 
+// Create a new review or update the existing review
+const productReview = async (req, res, next) => {
+  const { Rating, Comment, productId } = req.body;
+  const review = {
+    User: req.userFromToken.id,
+    Name: req.userFromToken.Name,
+    Rating: Number(Rating),
+    Comment,
+  };
+
+  const product = await productModel.findById(productId);
+
+  const isReviewed = product.Reviews.some((rev) => {
+    return rev.User.toString() === req.userFromToken._id.toString();
+  });
+
+  if (isReviewed) {
+    product.Reviews.forEach((rev) => {
+      if (rev.User.toString() === req.userFromToken._id.toString()) {
+        rev.Rating = Rating;
+        rev.Comment = Comment;
+      }
+    });
+  } else {
+    product.Reviews.push(review);
+  }
+  await product.save();
+
+ 
+  const average=await product.updateAverage();
+  console.log(average);
+
+  res.status(200).json({
+    status: true,
+    average: average,
+    message: "Reviews updated successfully",
+  });
+};
+
+// Get all reviews
+const getAllReviews = async (req, res, next) => {
+  const product = await productModel.findById(req.query.id);
+  if (!product) {
+    return next(new ErrorHandler("No reviews found", 400));
+  }
+  res.status(200).json({
+    status: true,
+    allReviews: product.Reviews,
+  });
+};
+
+// To delete a review
+const deleteReview = async (req, res, next) => {
+  let product = await productModel.findById(req.query.id);
+  if (
+    req.userFromToken.role == "admin" ||
+    product.Reviews.some((val) => val.User == req.userFromToken.id)
+  ) {
+    let index = null;
+    product.Reviews.forEach((rev, i) => {
+      if (rev.id.toString() === req.query.reviewId.toString()) {
+        index = i;
+        return;
+      }
+    });
+    let rev = [...product.Reviews];
+    rev.splice(index, 1);
+    product.Reviews = rev;
+    await product.save();
+    const average=await product.updateAverage();
+    return res.status(200).json({
+      status: true,
+      allReviews: product.Reviews,
+      rating:average,
+    });
+  }
+
+  return res.status(400).json({
+    status: false,
+    allReviews: "You are not elegible to delete this data",
+  });
+};
+
 module.exports = {
   productController,
   oneProductController,
   deleteProductController,
   findTheProductController,
   updateProductController,
+  productReview,
+  getAllReviews,
+  deleteReview,
 };

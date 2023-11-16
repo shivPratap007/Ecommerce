@@ -33,22 +33,18 @@ const loginController = async (req, res, next) => {
   try {
     const { Email, Password } = req.body;
 
-    console.log(Email, Password);
     if (!Email || !Password) {
       return next(new ErrorHandler("Enter the full information", 400));
     }
 
     const result = await userModel.findOne({ Email });
-    console.log(1);
     if (!result) {
       return next(new ErrorHandler("Invalid email or password", 400));
     }
     const isPassowrdCorrect = await result.passwordChecker(Password);
-    console.log(isPassowrdCorrect);
     if (!isPassowrdCorrect) {
       return next(new ErrorHandler("Invalid email or password", 400));
     }
-    console.log("here");
     sentToken(result, 202, res); // We are able to send the whole response object
   } catch (error) {
     res.status(400).json({
@@ -261,6 +257,8 @@ const deleteUser = async (req, res, next) => {
     status: true,
   });
 };
+
+
 
 module.exports = {
   createUser,
